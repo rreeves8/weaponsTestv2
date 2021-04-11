@@ -148,7 +148,6 @@ MonoBehaviour:
   weapon: {fileID: 62877662}
   ammo: {fileID: 9012221385775703891, guid: ec498cc19dd9ad440a2a916f0f810aa7, type: 3}
   fire_point: {fileID: 1268510795}
-  time: 0
 --- !u!1 &145648088
 GameObject:
   m_ObjectHideFlags: 0
@@ -273,7 +272,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
 --- !u!1 &201552628
 GameObject:
   m_ObjectHideFlags: 0
@@ -731,11 +730,38 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1133729803999675392, guid: 0ac6723a10043e94cb2f00eb1c25acd6,
+        type: 3}
+      propertyPath: m_Mass
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 1133729803999675392, guid: 0ac6723a10043e94cb2f00eb1c25acd6,
+        type: 3}
+      propertyPath: m_IsKinematic
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1133729803999675392, guid: 0ac6723a10043e94cb2f00eb1c25acd6,
+        type: 3}
+      propertyPath: m_CollisionDetection
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 1133729803999675393, guid: 0ac6723a10043e94cb2f00eb1c25acd6,
         type: 3}
       propertyPath: player
       value: 
       objectReference: {fileID: 145648088}
+    - target: {fileID: 1133729803999675393, guid: 0ac6723a10043e94cb2f00eb1c25acd6,
+        type: 3}
+      propertyPath: birdshot
+      value: 
+      objectReference: {fileID: 9012221385775703891, guid: ec498cc19dd9ad440a2a916f0f810aa7,
+        type: 3}
+    - target: {fileID: 1133729803999675393, guid: 0ac6723a10043e94cb2f00eb1c25acd6,
+        type: 3}
+      propertyPath: birdshot2
+      value: 
+      objectReference: {fileID: 9012221385775703891, guid: ec498cc19dd9ad440a2a916f0f810aa7,
+        type: 3}
     - target: {fileID: 1133729803999675395, guid: 0ac6723a10043e94cb2f00eb1c25acd6,
         type: 3}
       propertyPath: m_RootOrder
@@ -790,6 +816,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1133729803999675404, guid: 0ac6723a10043e94cb2f00eb1c25acd6,
+        type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1133729803999675407, guid: 0ac6723a10043e94cb2f00eb1c25acd6,
         type: 3}

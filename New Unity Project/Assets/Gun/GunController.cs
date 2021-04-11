@@ -11,7 +11,7 @@ public class GunController : MonoBehaviour
 
     private GunADT gun;
 
-    public double time;
+    private double time;
 
     private List<GameObject> list = new List<GameObject>();
 
@@ -20,32 +20,44 @@ public class GunController : MonoBehaviour
     }
 
     void Update(){
-     
         time += Time.deltaTime;
         if (Input.GetKey(KeyCode.Mouse0)) {
             
             if (time > gun.getFireRate()) { //hold fire until next round is chambered
-                time = 0;
-                Transform pos = weapon.transform;
-                
-                GameObject obj = Instantiate(ammo, fire_point.transform.position, fire_point.transform.rotation) as GameObject;
-                
-                Rigidbody rb = obj.GetComponent<Rigidbody>();
+                try {
 
-                rb.velocity = rb.transform.forward * (float) gun.getMuzzleVelocity(); //get the front facing vector and multiply it by the veolocty value.
-                
-                rb.drag = (float) gun.getBullet().getCoeffeceintOfDrag(); //set drag
-                rb.mass = (float) gun.getBullet().getTotalMass(); //set mass
+                    gun.chamber();
+                    time = 0;
+                    
+                    Transform pos = weapon.transform;
+                    GameObject obj = Instantiate(ammo, fire_point.transform.position, fire_point.transform.rotation) as GameObject;
+                    Rigidbody rb = obj.GetComponent<Rigidbody>();
+                    
+                    rb.velocity = rb.transform.forward * (float)gun.getMuzzleVelocity(); //get the front facing vector and multiply it by the veolocty value.
+                    rb.drag = (float)gun.getBullet().getCoeffeceintOfDrag(); //set drag
+                    rb.mass = (float)gun.getBullet().getTotalMass(); //set mass
+                    obj.transform.Rotate(0f, 90.0f, 0.0f, Space.Self); //bullet model comes out sideways and this was the best I got for it
+                }
 
-                obj.transform.Rotate(0f, 90.0f, 0.0f, Space.Self); //bullet model comes out sideways and this was the best I got for it
+                catch (OutOfAMMOException ex) {
+                    //do some reload warning or just nothing
+                }
             }
+        }
+
+        if (Input.GetKey(KeyCode.R)) {
+            StartCoroutine(ReloadWaiter(gun.getMag().getReloadTime()));
+            gun.reload();
         }
     }
 
     void BuildGun() {
-        gun = new M240(new NATO556());
+        gun = new M240(new BeltBox(), new NATO556());
     }
 
+    IEnumerator ReloadWaiter(float time) {
+        yield return new WaitForSeconds(time);
+    }
 }
 
 public class M240 : GunADT {
@@ -53,9 +65,12 @@ public class M240 : GunADT {
 
     private AttachmentsADT barrel;
 
+    private MagazineADT mag;
+
     private double barrelLength = 0.3556; //13inch
 
-    public M240 (BulletADT type) {
+    public M240 (MagazineADT mag, BulletADT type) {
+        this.mag = mag;
         bullet = type;
     }
 
@@ -65,14 +80,12 @@ public class M240 : GunADT {
         }
 
         double ForceOfPropelant = bullet.getAdiabaticFlameConstant() * bullet.getGunPowderEnthalpy(); //force of propelent, see doc
-        
-        Debug.Log("Propelent force"+": flame constant = "+ bullet.getAdiabaticFlameConstant()+ " * Gun Enthalpy: "+ bullet.getGunPowderEnthalpy() +" = " + ForceOfPropelant);
 
         double work = ForceOfPropelant * barrelLength; // W= F*D, force being propelent and distance being barrel length.
-        Debug.Log("Work Done by propelent through barrel length" + work);
 
         double velocity = Math.Sqrt(((2 * work) / bullet.getBulletMass())); //convert work energy to kinetic energy as it leaves barrel, should include friction from barrel
-        Debug.Log("Work Energy converted to Kinematic energy, V final = " + velocity);
+
+        mag.chamber();
 
         return velocity;
     }
@@ -91,7 +104,46 @@ public class M240 : GunADT {
     public BulletADT getBullet() {
         return bullet;
     }
+
+    public void reload() {
+        mag.reload();
+    }
+
+    public MagazineADT getMag() {
+        return mag;
+    }
+
+    public void chamber() {
+        mag.chamber();
+    }
 }
+
+public class BeltBox : MagazineADT {
+    private double magSize = 150;
+
+    private double rounds = 150;
+
+    public void chamber() {     
+        if(rounds <= 0) {
+            throw new OutOfAMMOException();
+        }  
+        rounds--;
+    }
+
+    public double getMagSize() {
+        return magSize;
+    }
+
+    public void reload() {
+        rounds = magSize;
+    }
+
+    public float getReloadTime() {
+        return 5;
+    }
+
+}
+
 
 /// <summary>
 /// barrel Upgrade derived from attachments, not used, it increases the barrel length so when the work calculation is done, distance is higher giving it more kintic energy
@@ -176,10 +228,40 @@ public interface AttachmentsADT {
 
 public interface GunADT {
     double getMuzzleVelocity();
-    
+
     void addAtachment(AttachmentsADT attachment);
 
     double getFireRate();
 
+    void reload();
+
     BulletADT getBullet();
+
+    MagazineADT getMag();
+
+    void chamber();
+}
+    
+
+public interface MagazineADT {
+    void chamber();
+
+    double getMagSize();
+
+    void reload();
+
+    float getReloadTime();
+
+}
+
+/// <summary>
+/// I enjoy using exceptions because they make shifting states very easy and I think it makes reading code easier, I dunno if they're bad to use in games though
+/// </summary>
+
+[Serializable]
+public class OutOfAMMOException : Exception {
+
+    public OutOfAMMOException() {
+        
+    }
 }

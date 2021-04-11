@@ -21,10 +21,10 @@ public class AIBehaviour : MonoBehaviour {
         transform.LookAt(player.transform);
         float step = speed * Time.deltaTime;
         transform.position = Vector3.MoveTowards(transform.position, player.transform.position, step);
-
         time += Time.deltaTime;
         
-        if (time > 0.5f) {
+        /*
+        if (time > 1/15.8) {
             
             time = 0;
             
@@ -33,15 +33,18 @@ public class AIBehaviour : MonoBehaviour {
 
             GameObject obj = Instantiate(birdshot, fire_point.transform.position, fire_point.transform.rotation) as GameObject;
             GameObject obj2 = Instantiate(birdshot2, fire_point2.transform.position, fire_point2.transform.rotation) as GameObject;
+            
+            obj.transform.parent = null;
+            obj2.transform.parent = null;
 
             Rigidbody rb = obj.GetComponent<Rigidbody>();
             Rigidbody rb2 = obj2.GetComponent<Rigidbody>();
 
-            rb.AddForce(rb.transform.forward * 100);
-            rb2.AddForce(rb.transform.forward * 100);
+            rb.velocity = rb.transform.forward * 910;
+            rb2.velocity = rb2.transform.forward * 910;
 
             obj.transform.Rotate(0f, 90.0f, 0.0f, Space.Self);
             obj2.transform.Rotate(0f, 90.0f, 0.0f, Space.Self);
-        }
+        */
     }
 }
