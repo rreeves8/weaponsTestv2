@@ -8,35 +8,54 @@ public class GunController : MonoBehaviour
     public GameObject weapon;
     public GameObject ammo;
     public GameObject fire_point;
-
-    private GunADT gun;
-
     private double time;
 
-    private List<GameObject> list = new List<GameObject>();
+    private GunADT gun;
+    private Dictionary<GameObject, float> list = new Dictionary<GameObject, float>();
+    private WindVector hurricane = new Hurricane();
 
     void Start() {
         BuildGun();
+
     }
 
     void Update(){
+        GunControl();
+        WindVector();
+        
+    }
+
+    void WindVector() {
+        foreach(KeyValuePair<GameObject, float> e in list) {
+            float elapsed = Time.time - e.Value;
+
+            if (elapsed > 60000) {
+                list.Remove(e.Key);
+            }
+            else {
+                e.Key.GetComponent<Rigidbody>().AddForce(hurricane.getValue(e.Key.transform.position, 5f));
+            }
+        }
+    }
+
+    void GunControl() {
         time += Time.deltaTime;
         if (Input.GetKey(KeyCode.Mouse0)) {
-            
             if (time > gun.getFireRate()) { //hold fire until next round is chambered
                 try {
-
                     gun.chamber();
                     time = 0;
-                    
+
                     Transform pos = weapon.transform;
                     GameObject obj = Instantiate(ammo, fire_point.transform.position, fire_point.transform.rotation) as GameObject;
+                    list.Add(obj, Time.time);
                     Rigidbody rb = obj.GetComponent<Rigidbody>();
+
+                    rb.velocity = rb.transform.forward * (float)gun.getMuzzleVelocity(); //get the front facing vector and multiply it by the veolocty value.                    
                     
-                    rb.velocity = rb.transform.forward * (float)gun.getMuzzleVelocity(); //get the front facing vector and multiply it by the veolocty value.
                     rb.drag = (float)gun.getBullet().getCoeffeceintOfDrag(); //set drag
                     rb.mass = (float)gun.getBullet().getTotalMass(); //set mass
-                    obj.transform.Rotate(0f, 90.0f, 0.0f, Space.Self); //bullet model comes out sideways and this was the best I got for it
+                    obj.transform.Rotate(0f, 90.0f, 0.0f, Space.Self); //bullet model comes out sideways and this was the best I got for it                       
                 }
 
                 catch (OutOfAMMOException ex) {
@@ -144,11 +163,9 @@ public class BeltBox : MagazineADT {
 
 }
 
-
 /// <summary>
 /// barrel Upgrade derived from attachments, not used, it increases the barrel length so when the work calculation is done, distance is higher giving it more kintic energy
 /// </summary>
-
 public class ExtendedBarrel : AttachmentsADT {
 
     public double getIncreasedMass() {
@@ -170,7 +187,7 @@ public class NATO556 : BulletADT {
 
     public double unknownCoeffecient = 0.383229621509869; //very complex calculations that depend on pressure inside cartidge casing and the enthalpy of transformation, I just reversed calculated everything entirely necissary and the missing comonent left as a constant, the constant changes slightly depneding on gun powder quality and different chemcial structure
     
-    public double Cd = 1.3; //under normal circumstances
+    public double Cd = 0.3; //under normal circumstances
 
     public double getGunPowderEnthalpy() {
         return gunPowderEnthalpy * ((grain / 15432));
@@ -195,11 +212,9 @@ public class NATO556 : BulletADT {
     }
 }
 
-
 /// <summary>
 /// bullet types and there properties can be extended from here and different guns can have different bullet types
 /// </summary>
-
 public interface BulletADT {
     double getGunPowderEnthalpy();
 
@@ -215,7 +230,6 @@ public interface BulletADT {
 /// <summary>
 /// Attachments interface, types of attachments can be made from here and easily added to the gun class
 /// </summary>
-
 public interface AttachmentsADT {
     double getIncreasedMass();
 
@@ -225,7 +239,6 @@ public interface AttachmentsADT {
 /// <summary>
 /// Base interface for gun, different guns cant be derived from here to make player implentation easier
 /// </summary>
-
 public interface GunADT {
     double getMuzzleVelocity();
 
@@ -242,7 +255,6 @@ public interface GunADT {
     void chamber();
 }
     
-
 public interface MagazineADT {
     void chamber();
 
@@ -257,11 +269,46 @@ public interface MagazineADT {
 /// <summary>
 /// I enjoy using exceptions because they make shifting states very easy and I think it makes reading code easier, I dunno if they're bad to use in games though
 /// </summary>
-
 [Serializable]
 public class OutOfAMMOException : Exception {
 
     public OutOfAMMOException() {
         
     }
+}
+
+public interface WindVector{
+    Vector3 getValue(Vector3 pos, float strength);
+}
+
+public class Hurricane : WindVector {
+
+    private VectorFunction spiral = new VectorFunction();
+
+    public bool isMoving {
+        get { return isMoving; }
+        set { isMoving = value; }
+    }
+
+    public Vector3 getValue(Vector3 pos, float strength) {
+        return spiral.getSpiralVector(pos, strength);  
+    }
+
+    //future method that moves the feild
+}
+
+public class VectorFunction {
+
+    public Vector3 origin = new Vector3(0, 0, 0);
+
+    public Vector3 getSpiralVector(Vector3 position, float strength) { //spiral vectors
+        float x = origin.y - (strength * position.z);
+        float z = origin.z + (strength * position.x);
+        return new Vector3(x, 0, z);
+    }
+
+    public void setOrigin(Vector3 origin) {
+        this.origin = origin;
+    }
+
 }
